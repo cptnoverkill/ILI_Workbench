@@ -1,0 +1,85 @@
+{
+  "name": "ili-correlation-workbench",
+  "version": "0.2.7",
+  "description": "ILI Correlation Workbench \u2014 Pipeline Integrity Analysis",
+  "main": "main.js",
+  "author": {
+    "name": "C-Squared",
+    "email": "contact@c-squared.com"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win --x64",
+    "build:mac": "electron-builder --mac --universal",
+    "build:linux": "electron-builder --linux --x64",
+    "build:all": "electron-builder --win --mac --linux"
+  },
+  "devDependencies": {
+    "electron": "^29.0.0",
+    "electron-builder": "^24.13.0"
+  },
+  "build": {
+    "appId": "com.csquared.ili-correlation-workbench",
+    "productName": "ILI Correlation Workbench",
+    "copyright": "\u00a9 2026 C-Squared",
+    "files": [
+      "main.js",
+      "preload.js",
+      "license.js",
+      "index.html",
+      "license-screen.html",
+      "assets/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.utilities",
+      "darkModeSupport": true
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.png",
+      "category": "Science"
+    },
+    "publish": null,
+    "portable": {
+      "artifactName": "ILI_Correlation_Workbench_V${version}.exe"
+    }
+  }
+}
