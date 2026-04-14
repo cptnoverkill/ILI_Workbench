@@ -8,6 +8,9 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: ili-workbench-app
 
     steps:
       - name: Checkout code
@@ -28,5 +31,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ILI-Workbench-Windows
-          path: dist/*.exe
+          path: ili-workbench-app/dist/*.exe
           retention-days: 30
