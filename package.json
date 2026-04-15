@@ -17,8 +17,8 @@
     "build:all": "electron-builder --win --mac --linux"
   },
   "devDependencies": {
-    "electron": "^29.0.0",
-    "electron-builder": "^24.13.0"
+    "electron": "^25.0.0",
+    "electron-builder": "^23.6.0"
   },
   "build": {
     "appId": "com.csquared.ili-correlation-workbench",
@@ -31,67 +31,21 @@
       "index.html",
       "license-screen.html",
       "splash.html",
-      "assets/**",
-      "node_modules/**"
+      "assets/**"
     ],
     "directories": {
       "output": "dist"
     },
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
+      "target": "nsis",
       "icon": "assets/icon.ico"
     },
-    "mac": {
-      "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "universal"
-          ]
-        }
-      ],
-      "icon": "assets/icon.icns",
-      "category": "public.app-category.utilities",
-      "darkModeSupport": true
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
-          "target": "deb",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "assets/icon.png",
-      "category": "Science"
-    },
-    "publish": null,
-    "compression": "store",
-    "asar": false,
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": "assets/icon.ico",
-      "uninstallerIcon": "assets/icon.ico",
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
       "shortcutName": "ILI Correlation Workbench",
-      "artifactName": "ILI_Correlation_Workbench_V${version}_Setup.exe",
-      "perMachine": false
-    }
+      "artifactName": "ILI_Correlation_Workbench_Setup.exe"
+    },
+    "publish": null
   }
 }
