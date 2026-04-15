@@ -1,16 +1,31 @@
 const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron');
 const path    = require('path');
+const fs      = require('fs');
+
+// Write crash log to Desktop so we can see errors if app silently fails
+const logPath = require('path').join(require('os').homedir(), 'Desktop', 'ILI_crash.log');
+function log(msg) {
+  const line = new Date().toISOString() + ' ' + msg + '\n';
+  try { fs.appendFileSync(logPath, line); } catch {}
+  console.log(msg);
+}
+process.on('uncaughtException', (err) => {
+  log('UNCAUGHT: ' + err.message + '\n' + err.stack);
+});
+
+log('App starting...');
+
 const license = require('./license');
 
 let mainWindow    = null;
 let licenseWindow = null;
 let splashWindow  = null;
 
-// Force hardware GPU acceleration for smooth canvas rendering
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
-app.commandLine.appendSwitch('enable-hardware-overlays');
+// Disable GPU sandbox — causes 0xc0000005 access violation crashes
+// on some Windows systems with certain GPU drivers
+app.commandLine.appendSwitch('no-sandbox');
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+app.disableHardwareAcceleration();
 
 // ── Splash screen ─────────────────────────────────────────────────────────────
 function showSplash(callback) {
@@ -50,7 +65,9 @@ function checkAndGate() {
   // Show splash FIRST, then check license inside the callback
   // so the splash is guaranteed to be visible before any blocking work
   showSplash(() => {
+    log('Splash shown, checking license...');
     const result = license.checkLicense();
+    log('License check result: ' + result.reason);
     if (result.ok) {
       openMainApp(result.data);
     } else if (result.reason === 'not_activated') {
@@ -211,6 +228,7 @@ function showLicenseInfo(licenseData) {
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 app.whenReady().then(()=>{
+  log('App ready, running checkAndGate...');
   checkAndGate();
   app.on('activate',()=>{
     if(!mainWindow&&!licenseWindow&&!splashWindow) checkAndGate();
