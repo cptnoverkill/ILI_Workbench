@@ -31,7 +31,8 @@
       "index.html",
       "license-screen.html",
       "splash.html",
-      "assets/**"
+      "assets/**",
+      "node_modules/**"
     ],
     "directories": {
       "output": "dist"
@@ -39,7 +40,7 @@
     "win": {
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": [
             "x64"
           ]
@@ -79,11 +80,18 @@
       "category": "Science"
     },
     "publish": null,
-    "portable": {
-      "artifactName": "ILI_Correlation_Workbench_V${version}.exe",
-      "requestExecutionLevel": "user"
-    },
     "compression": "store",
-    "asar": true
+    "asar": false,
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "ILI Correlation Workbench",
+      "artifactName": "ILI_Correlation_Workbench_V${version}_Setup.exe",
+      "perMachine": false
+    }
   }
 }
