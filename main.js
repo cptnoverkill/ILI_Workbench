@@ -2,12 +2,18 @@ const { app, BrowserWindow, Menu, shell, dialog, ipcMain } = require('electron')
 const path    = require('path');
 const license = require('./license');
 
-let mainWindow   = null;
+let mainWindow    = null;
 let licenseWindow = null;
 let splashWindow  = null;
 
+// Force hardware GPU acceleration for smooth canvas rendering
+app.commandLine.appendSwitch('enable-gpu-rasterization');
+app.commandLine.appendSwitch('enable-zero-copy');
+app.commandLine.appendSwitch('ignore-gpu-blocklist');
+app.commandLine.appendSwitch('enable-hardware-overlays');
+
 // ── Splash screen ─────────────────────────────────────────────────────────────
-function showSplash() {
+function showSplash(callback) {
   splashWindow = new BrowserWindow({
     width: 340, height: 280,
     frame: false,
@@ -15,24 +21,35 @@ function showSplash() {
     resizable: false,
     center: true,
     skipTaskbar: true,
+    alwaysOnTop: true,
     icon: path.join(__dirname, 'assets', 'icon.png'),
-    webPreferences: { nodeIntegration: false, contextIsolation: true },
+    webPreferences: { nodeIntegration:false, contextIsolation:true },
     backgroundColor: '#0d1117',
     show: false,
   });
+
   splashWindow.loadFile('splash.html');
-  splashWindow.once('ready-to-show', () => splashWindow.show());
+
+  // Wait until splash is fully painted before proceeding
+  splashWindow.once('ready-to-show', () => {
+    splashWindow.show();
+    // Give the renderer one full frame to paint before we do heavy work
+    setTimeout(callback, 200);
+  });
 }
 
 function closeSplash() {
-  if (splashWindow) { splashWindow.destroy(); splashWindow = null; }
+  if (splashWindow) {
+    splashWindow.destroy();
+    splashWindow = null;
+  }
 }
 
 // ── License gate ──────────────────────────────────────────────────────────────
 function checkAndGate() {
-  showSplash();
-  // Small delay so splash renders before heavy work starts
-  setTimeout(() => {
+  // Show splash FIRST, then check license inside the callback
+  // so the splash is guaranteed to be visible before any blocking work
+  showSplash(() => {
     const result = license.checkLicense();
     if (result.ok) {
       openMainApp(result.data);
@@ -49,7 +66,7 @@ function checkAndGate() {
       closeSplash();
       showLicenseError(result.error || 'License verification failed.', 'License Error', true);
     }
-  }, 400);
+  });
 }
 
 function showLicenseError(message, title, allowRetry) {
@@ -84,8 +101,7 @@ ipcMain.handle('license:activate', async (_, rawKey) => {
   const result = license.activateLicense(rawKey);
   if (result.ok) {
     if (licenseWindow) { licenseWindow.destroy(); licenseWindow=null; }
-    showSplash();
-    setTimeout(() => openMainApp(result.data), 400);
+    showSplash(() => openMainApp(result.data));
     return { ok:true };
   }
   return { ok:false, error:result.error };
@@ -113,11 +129,12 @@ function openMainApp(licenseData) {
       preload: path.join(__dirname,'preload.js'),
     },
     backgroundColor:'#090c10',
-    show: false, // show only when ready — avoids white flash
+    show: false,
   });
 
   mainWindow.loadFile('index.html');
 
+  // Keep splash visible until main window is fully ready, then crossfade
   mainWindow.once('ready-to-show', () => {
     closeSplash();
     mainWindow.show();
@@ -193,14 +210,13 @@ function showLicenseInfo(licenseData) {
 }
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
-// Force hardware GPU acceleration for smooth canvas rendering
-app.commandLine.appendSwitch('enable-gpu-rasterization');
-app.commandLine.appendSwitch('enable-zero-copy');
-app.commandLine.appendSwitch('ignore-gpu-blocklist');
-app.commandLine.appendSwitch('enable-hardware-overlays');
-
 app.whenReady().then(()=>{
   checkAndGate();
-  app.on('activate',()=>{ if(!mainWindow&&!licenseWindow&&!splashWindow) checkAndGate(); });
+  app.on('activate',()=>{
+    if(!mainWindow&&!licenseWindow&&!splashWindow) checkAndGate();
+  });
 });
-app.on('window-all-closed',()=>{ if(process.platform!=='darwin') app.quit(); });
+
+app.on('window-all-closed',()=>{
+  if(process.platform!=='darwin') app.quit();
+});
